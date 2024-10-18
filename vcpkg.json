@@ -1,0 +1,28 @@
+{
+  "name": "ciftl",
+  "dependencies": [
+    "gtest",
+    "openssl",
+    "crc32c",
+    "botan",
+    "fmt"
+  ],
+  "overrides": [
+    {
+      "name" : "fmt",
+      "version" : "11.0.2"
+    },
+    {
+      "name": "openssl",
+      "version": "3.3.1"
+    },
+    {
+      "name": "gtest",
+      "version": "1.14.0"
+    },
+    {
+      "name": "botan",
+      "version": "3.5.0"
+    }
+  ]
+}
