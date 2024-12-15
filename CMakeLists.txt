@@ -16,55 +16,48 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 # 设置构建类型
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
-endif()
+endif ()
 
 # 根据构建类型设置编译器选项
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Build type: Debug")
-    if(MSVC)
+    set(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/Debug")
+    set(EXECUTABLE_OUTPUT_PATH "${EXECUTABLE_OUTPUT_PATH}/Debug")
+    if (MSVC)
         # Visual Studio 编译器的 Debug 选项
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od /Zi /D_DEBUG")
-    else()
+    else ()
         # GCC 编译器的 Debug 选项
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
-    endif()
-else()
+    endif ()
+else ()
     message(STATUS "Build type: Release")
-    if(MSVC)
+    set(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/Release")
+    set(EXECUTABLE_OUTPUT_PATH "${EXECUTABLE_OUTPUT_PATH}/Release")
+    if (MSVC)
         # Visual Studio 编译器的 Release 选项
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Gy /DNDEBUG")
-    else()
+    else ()
         # GCC 编译器的 Release 选项
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
-    endif()
-endif()
+    endif ()
+endif ()
 
 # 对MSVC的特殊支持
-if(MSVC)
+if (MSVC)
     # 对于MSVC需要支持utf-8
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /utf-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /utf-8")
     # 编译选项
-    set (CMAKE_CONFIGURATION_TYPES "Debug;Release")
+    set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
     # Debug生成的后缀
-    set (CMAKE_DEBUG_POSTFIX D)
+    set(CMAKE_DEBUG_POSTFIX D)
     # windows系统动态库生成lib文件的命令
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif(MSVC)
-
-# 对于MSVC而言，不需要指定目录为Debug或是Release
-if (NOT MSVC)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/Debug")
-        set(EXECUTABLE_OUTPUT_PATH "${EXECUTABLE_OUTPUT_PATH}/Debug")
-    else ()
-        set(LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH}/Release")
-        set(EXECUTABLE_OUTPUT_PATH "${EXECUTABLE_OUTPUT_PATH}/Release")
-    endif ()
-endif ()
+endif (MSVC)
 
 # 设置相关头文件路径
 set(CIFTL_HOME_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include/")
@@ -95,7 +88,6 @@ include_directories(${CIFTL_HOME_INCLUDE_PATH})
 
 find_package(OpenSSL REQUIRED)
 find_package(Crc32c CONFIG REQUIRED)
-find_package(Botan REQUIRED)
 
 # 添加源文件
 add_library(${PROJECT_NAME}
@@ -109,7 +101,7 @@ add_library(${PROJECT_NAME}
         ${CIFTL_CRYPTER_SOURCE}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto Crc32c::crc32c Botan::Botan)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto Crc32c::crc32c)
 
 # 添加单元测试
 enable_testing()

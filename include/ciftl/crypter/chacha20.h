@@ -2,7 +2,6 @@
 #include <memory>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-#include <botan/stream_cipher.h>
 
 #include <ciftl/crypter/crypter.h>
 #include <ciftl/etc/etc.h>
@@ -37,6 +36,6 @@ namespace ciftl
         [[nodiscard]] size_t block_length() const noexcept override { return BLOCK_LENGTH; }
 
     private:
-        std::unique_ptr<Botan::StreamCipher> m_botan_chacha20;
+        EVP_CIPHER_CTX_UniquePtr m_ctx;
     };
 }
