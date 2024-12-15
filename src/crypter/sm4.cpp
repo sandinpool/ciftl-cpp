@@ -7,16 +7,11 @@
 
 namespace ciftl
 {
-    typedef typename SM4OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
-    typedef typename SM4OpenSSLStreamGenerator::IVByteArray IVByteArray;
-
-    SM4OpenSSLStreamGenerator::SM4OpenSSLStreamGenerator(const IVByteArray &iv, const KeyByteArray &key, StreamGeneratorMode mode)
-        : OriginalSM4OpenSSLStreamGenerator(iv, key, mode)
+    OpenSSLSM4OFBCipherAlgorithm::OpenSSLSM4OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                               const byte *key_data, size_t key_len)
+        : OriginalOpenSSLSM4CipherAlgorithm(
+            OriginalOpenSSLAES128CipherAlgorithm::create_openssl_context(
+                EVP_sm4_ofb(), iv_data, iv_len, key_data, key_len))
     {
-        // 初始化加密操作
-        if (!EVP_EncryptInit_ex(m_ctx, EVP_sm4_ofb(), NULL, m_key.data(), m_iv.data()))
-        {
-            throw std::bad_alloc();
-        }
     }
 }

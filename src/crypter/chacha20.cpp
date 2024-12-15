@@ -1,22 +1,39 @@
 #pragma once
-#include <crc32c/crc32c.h>
+#include <memory>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <botan/stream_cipher.h>
 
-#include <ciftl/crypter/chacha20.h>
-#include <ciftl/crypter/core_crypter.h>
+#include <ciftl/crypter/crypter.h>
+#include <ciftl/etc/etc.h>
 
 namespace ciftl
 {
-    ChaCha20OpenSSLStreamGenerator::ChaCha20OpenSSLStreamGenerator(const ChaCha20OpenSSLStreamGenerator::IVByteArray &iv,
-                                                                   const ChaCha20OpenSSLStreamGenerator::KeyByteArray &key, StreamGeneratorMode mode)
-        : OriginalChaCha20OpenSSLStreamGenerator(iv, key, mode)
+    ChaCha20CipherAlgorithm::ChaCha20CipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                     const byte *key_data, size_t key_len)
+        : m_botan_chacha20(Botan::StreamCipher::create_or_throw("ChaCha20"))
     {
-        if (!EVP_EncryptInit_ex(m_ctx, EVP_chacha20(), NULL, m_key.data(), m_iv.data()))
-        {
-            throw std::bad_alloc();
-        }
+        assert(iv_len == IV_LENGTH);
+        assert(key_len == KEY_LENGTH);
+        m_botan_chacha20->set_key(key_data, key_len);
+        m_botan_chacha20->set_iv(iv_data, iv_len);
     }
 
-
-} // namespace ciftl
+    Result<void> ChaCha20CipherAlgorithm::crypt(const byte *src_data, size_t src_len, byte *dst_data,
+                                                size_t dst_len) noexcept
+    {
+        if (src_len != dst_len) {
+            return Result<void>::make_err(SRC_AND_DST_MEMORY_HAS_DIFFERENT_LENGTH);
+        }
+        // 用span包装dst_data
+        std::span<byte> temp_buffer(dst_data, dst_len);
+        memcpy(temp_buffer.data(), src_data, src_len);
+        try {
+            // 执行加密，这里是对m_plaintext_buffer进行加密，并将结果拷贝到temp_buffer中
+            m_botan_chacha20->encipher(temp_buffer);
+        } catch (...) {
+            return Result<void>::make_err(FAILED_WHEN_ENCRYPTING_WITH_BOTAN);
+        }
+        return Result<void>::make_ok();
+    }
+}

@@ -4,4 +4,3 @@
 #include <ciftl/encoding/base64.h>
 #include <ciftl/encoding/hex.h>
 #include <ciftl/encoding/bin.h>
-

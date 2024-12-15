@@ -6,49 +6,82 @@
 
 using namespace ciftl;
 
-TEST(TestCrypter, TestStreamCrypter)
+TEST(TestCrypter, TestMockCipherAlgorithm)
 {
-    auto test_iv1 = StreamGenerator<128, 128>::generate_iv_from_factor((uint32_t)123456);
-    GTEST_LOG_(INFO) << fmt::format("Test IV1: {}", auto_format(test_iv1));
-    auto test_iv2 = StreamGenerator<128, 128>::rand_iv();
-    GTEST_LOG_(INFO) << fmt::format("Test IV2: {}", auto_format(test_iv2));
-    auto test_key = StreamGenerator<128, 192>::generate_key_from_password("123456");
-    GTEST_LOG_(INFO) << fmt::format("Test Key: {}", auto_format(test_key));
-    // ChaCha20
-    {
-        typedef ChaCha20OpenSSLStreamGenerator::IVByteArray IVByteArray;
-        typedef ChaCha20OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
-
-        auto iv1 = ChaCha20OpenSSLStreamGenerator::rand_iv();
-        GTEST_LOG_(INFO) << fmt::format("IV1: {}", auto_format(iv1));
-        IVByteArray iv2 = {0x89, 0x45, 0x9A, 0x13,
-                           0xB4, 0x57, 0x10, 0x4F,
-                           0x23, 0x43, 0xD4, 0x59};
-        KeyByteArray key = ChaCha20OpenSSLStreamGenerator::generate_key_from_password("123456");
-        auto ccsg1 = std::make_shared<ChaCha20OpenSSLStreamGenerator>(iv2, key, StreamGeneratorMode::Large);
-        StreamCrypter sc1(ccsg1);
-        ByteVector plain = {0x41, 0x42, 0x43, 0x44, 0x31, 0x32, 0x33, 0x34};
-        sc1.crypt(plain);
-        auto ccsg2 = std::make_shared<ChaCha20OpenSSLStreamGenerator>(iv2, key, StreamGeneratorMode::Short);
-        StreamCrypter sc2(ccsg2);
-        sc2.crypt(plain);
-        ASSERT_TRUE(is_equal(plain, {0x41, 0x42, 0x43, 0x44, 0x31, 0x32, 0x33, 0x34}));
-    }
+    StreamGenerator<MockCipherAlgorithm> sg(nullptr, 16, nullptr, 16, StreamGeneratorMode::Short);
+    ByteVector buffer(32);
+    EXPECT_TRUE(sg.generate(buffer).is_ok());
+    // 测试StringCrypter
+    StringCrypter<MockCipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("w8Erj4lT9jI24N3gVVjVqcs8eAx8f355eHs=", "123456").unwrap();
+    EXPECT_EQ("123456", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
 }
 
-TEST(TestCrypter, TestStringCrypter)
+TEST(TestCrypter, TestChaCha20)
 {
-    // ChaCha20
-    {
-        StringCrypter<ChaCha20OpenSSLStreamGenerator> string_crypter;
-        std::string plain_text = "abcdefg1234567";
-        auto res1 = string_crypter.encrypt(plain_text, "123456");
-        EXPECT_TRUE(res1.is_ok());
-        std::string en_text = res1.ok().value();
-        auto res2 = string_crypter.decrypt(en_text, "123456");
-        EXPECT_TRUE(res2.is_ok());
-        EXPECT_EQ(plain_text, res2.ok().value());
-        auto res3 = string_crypter.decrypt(en_text, "1234567");
-        EXPECT_TRUE(res3.is_err());
-    }
+    // 测试StreamGenerator
+    StreamGenerator<ChaCha20CipherAlgorithm> sg((const byte *) "AAAAAAAAAAAA", 12,
+                                                (const byte *) "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", 32,
+                                                StreamGeneratorMode::Short);
+    ByteVector chacha20_cipher_buffer(32);
+    sg.generate(chacha20_cipher_buffer);
+    // 测试StringCrypter
+    StringCrypter<ChaCha20CipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("e2fT1ou13uSN0TMXyVtS19nAC82sRV1R5Ktk", "123456").unwrap();
+    EXPECT_EQ("ABCDEFGHIJK", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
+    EXPECT_TRUE(sc.decrypt("e2fT1ou13uSN1TMXyVtS19nAC82sRV1R5Ktk", "123456").is_err());
+}
+
+TEST(TestCrypter, TestAES128)
+{
+    // 测试StringCrypter
+    StringCrypter<OpenSSLAES128OFBCipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("iYW3Juua4HKBTwcdP643U0bYm7UySIvmH52W3ukzjQ==", "123456").unwrap();
+    EXPECT_EQ("ABCDEFGHIJK", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
+    EXPECT_TRUE(sc.decrypt("iYW3Juua5HKBTwcdP643U0bYm7UySIvmH52W3ukzjQ==", "123456").is_err());
+}
+
+TEST(TestCrypter, TestAES192)
+{
+    // 测试StringCrypter
+    StringCrypter<OpenSSLAES192OFBCipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("ZlgK0r/HgOAkZn/KS9EuWM1mTRk0WqPbX+yWeMFo3Q==", "123456").unwrap();
+    EXPECT_EQ("ABCDEFGHIJK", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
+    EXPECT_TRUE(sc.decrypt("ZlgK0r/Hg1AkZn/KS9EuWM1mTRk0WqPbX+yWeMFo3Q==", "123456").is_err());
+}
+
+TEST(TestCrypter, TestAES256)
+{
+    // 测试StringCrypter
+    StringCrypter<OpenSSLAES256OFBCipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("Q0izd0rYEQcd7FWMZxqGjNctTzpABGbd1RJZQ9BZ2Q==", "123456").unwrap();
+    EXPECT_EQ("ABCDEFGHIJK", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
+    EXPECT_TRUE(sc.decrypt("Q0izd0rYEQcd7EWMZxqGjNctTzpABGbd1RJZQ9BZ2Q==", "123456").is_err());
+}
+
+TEST(TestCrypter, TestSM4)
+{
+    // 测试StringCrypter
+    StringCrypter<OpenSSLSM4OFBCipherAlgorithm> sc;
+    auto encrypted_result = sc.encrypt("123456", "123456").unwrap();
+    GTEST_LOG_(INFO) << fmt::format("Encrypted Result: {}", encrypted_result);
+    auto decrypted_result = sc.decrypt("9PL2/F6R7XjwFLDHhZpbA+I7+vtwJ8GmgcvaaWgK6g==", "123456").unwrap();
+    EXPECT_EQ("ABCDEFGHIJK", decrypted_result);
+    GTEST_LOG_(INFO) << fmt::format("Decrypted Result: {}", decrypted_result);
+    EXPECT_TRUE(sc.decrypt("9PL2/F6R7XjwFLDHhZpbA+17+vtwJ8GmgcvaaWgK6g==", "123456").is_err());
 }

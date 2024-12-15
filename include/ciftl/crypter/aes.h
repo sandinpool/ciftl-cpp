@@ -2,6 +2,7 @@
 #include <memory>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+
 #include <ciftl/crypter/crypter.h>
 #include <ciftl/etc/etc.h>
 
@@ -11,19 +12,16 @@ namespace ciftl
     constexpr static size_t AES128_IV_LENGTH = 16;
     constexpr static size_t AES128_BLOCK_LENGTH = 16;
 
-    typedef StreamGeneratorForOpenSSL<AES128_IV_LENGTH, AES128_KEY_LENGTH, AES128_BLOCK_LENGTH> OriginalAES128OpenSSLStreamGenerator;
-    class AES128OpenSSLStreamGenerator : public OriginalAES128OpenSSLStreamGenerator
+    typedef OpenSSLCipherAlgorithm<AES128_IV_LENGTH, AES128_KEY_LENGTH, AES128_BLOCK_LENGTH>
+    OriginalOpenSSLAES128CipherAlgorithm;
+
+    class OpenSSLAES128OFBCipherAlgorithm : public OriginalOpenSSLAES128CipherAlgorithm
     {
     public:
-        typedef typename OriginalAES128OpenSSLStreamGenerator::IVByteArray IVByteArray;
-        typedef typename OriginalAES128OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
+        OpenSSLAES128OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        AES128OpenSSLStreamGenerator(const IVByteArray &iv, const KeyByteArray &key, StreamGeneratorMode mode = StreamGeneratorMode::Medium);
-
-        ~AES128OpenSSLStreamGenerator() = default;
+        ~OpenSSLAES128OFBCipherAlgorithm() = default;
     };
-
-    typedef StringCrypter<AES128OpenSSLStreamGenerator> AES128OpenSSLStringCrypter;
 }
 
 namespace ciftl
@@ -32,19 +30,16 @@ namespace ciftl
     constexpr static size_t AES192_IV_LENGTH = 16;
     constexpr static size_t AES192_BLOCK_LENGTH = 16;
 
-    typedef StreamGeneratorForOpenSSL<AES192_IV_LENGTH, AES192_KEY_LENGTH, AES192_BLOCK_LENGTH> OriginalAES192OpenSSLStreamGenerator;
-    class AES192OpenSSLStreamGenerator : public OriginalAES192OpenSSLStreamGenerator
+    typedef OpenSSLCipherAlgorithm<AES192_IV_LENGTH, AES192_KEY_LENGTH, AES192_BLOCK_LENGTH>
+    OriginalOpenSSLAES192CipherAlgorithm;
+
+    class OpenSSLAES192OFBCipherAlgorithm : public OriginalOpenSSLAES192CipherAlgorithm
     {
     public:
-        typedef typename OriginalAES192OpenSSLStreamGenerator::IVByteArray IVByteArray;
-        typedef typename OriginalAES192OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
+        OpenSSLAES192OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        AES192OpenSSLStreamGenerator(const IVByteArray &iv, const KeyByteArray &key, StreamGeneratorMode mode = StreamGeneratorMode::Medium);
-
-        ~AES192OpenSSLStreamGenerator() = default;
+        ~OpenSSLAES192OFBCipherAlgorithm() = default;
     };
-
-    typedef StringCrypter<AES192OpenSSLStreamGenerator> AES192OpenSSLStringCrypter;
 }
 
 namespace ciftl
@@ -53,17 +48,14 @@ namespace ciftl
     constexpr static size_t AES256_IV_LENGTH = 16;
     constexpr static size_t AES256_BLOCK_LENGTH = 16;
 
-    typedef StreamGeneratorForOpenSSL<AES256_IV_LENGTH, AES256_KEY_LENGTH, AES256_BLOCK_LENGTH> OriginalAES256OpenSSLStreamGenerator;
-    class AES256OpenSSLStreamGenerator : public OriginalAES256OpenSSLStreamGenerator
+    typedef OpenSSLCipherAlgorithm<AES256_IV_LENGTH, AES256_KEY_LENGTH, AES256_BLOCK_LENGTH>
+    OriginalOpenSSLAES256CipherAlgorithm;
+
+    class OpenSSLAES256OFBCipherAlgorithm : public OriginalOpenSSLAES256CipherAlgorithm
     {
     public:
-        typedef typename OriginalAES256OpenSSLStreamGenerator::IVByteArray IVByteArray;
-        typedef typename OriginalAES256OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
+        OpenSSLAES256OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        AES256OpenSSLStreamGenerator(const IVByteArray &iv, const KeyByteArray &key, StreamGeneratorMode mode = StreamGeneratorMode::Medium);
-
-        ~AES256OpenSSLStreamGenerator() = default;
+        ~OpenSSLAES256OFBCipherAlgorithm() = default;
     };
-
-    typedef StringCrypter<AES256OpenSSLStreamGenerator> AES256OpenSSLStringCrypter;
 }

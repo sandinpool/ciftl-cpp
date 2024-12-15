@@ -12,30 +12,37 @@ namespace ciftl
         MD5,
         SHA1,
         SHA256,
-        SHA512
+        SHA512,
+        Crc32c
     };
 
-    class Hasher
+    class IHasher
     {
     public:
-        void operator=(const Hasher &) = delete;
-        void operator==(const Hasher &) = delete;
+        void operator=(const IHasher &) = delete;
+
+        void operator==(const IHasher &) = delete;
 
         virtual void update(const byte *data, size_t len) = 0;
+
         virtual void update(const ByteVector &data) = 0;
+
         virtual void update(const std::string &data) = 0;
 
         virtual ByteVector finalize() = 0;
     };
 
-    class OpenSSLHasher : public Hasher
+    class OpenSSLHasher : public IHasher
     {
     public:
         OpenSSLHasher(const EVP_MD *md);
+
         ~OpenSSLHasher();
 
         virtual void update(const byte *data, size_t len);
+
         virtual void update(const ByteVector &data);
+
         virtual void update(const std::string &data);
 
         ByteVector finalize();
@@ -49,6 +56,7 @@ namespace ciftl
     {
     public:
         MD5Hasher();
+
         ~MD5Hasher() = default;
     };
 
@@ -56,6 +64,7 @@ namespace ciftl
     {
     public:
         Sha1Hasher();
+
         ~Sha1Hasher() = default;
     };
 
@@ -63,6 +72,7 @@ namespace ciftl
     {
     public:
         Sha256Hasher();
+
         ~Sha256Hasher() = default;
     };
 
@@ -70,7 +80,27 @@ namespace ciftl
     {
     public:
         Sha512Hasher();
+
         ~Sha512Hasher() = default;
     };
 
+    // Crc32c
+    class Crc32cHasher : public IHasher
+    {
+        uint32_t m_crc32c;
+
+    public:
+        Crc32cHasher();
+
+        ~Crc32cHasher();
+
+    public:
+        virtual void update(const byte *data, size_t len);
+
+        virtual void update(const ByteVector &data);
+
+        virtual void update(const std::string &data);
+
+        ByteVector finalize();
+    };
 } // namespace ciftl

@@ -3,71 +3,40 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <botan/stream_cipher.h>
+
 #include <ciftl/crypter/crypter.h>
 #include <ciftl/etc/etc.h>
+
+#include "openssl.h"
 
 namespace ciftl
 {
     constexpr static size_t CHACHA20_KEY_LENGTH = 32;
     constexpr static size_t CHACHA20_IV_LENGTH = 12;
+    constexpr static size_t CHACHA20_BLOCK_LENGTH = 0;
 
-    typedef StreamGeneratorForOpenSSL<CHACHA20_IV_LENGTH, CHACHA20_KEY_LENGTH> OriginalChaCha20OpenSSLStreamGenerator;
-    class ChaCha20OpenSSLStreamGenerator final : public OriginalChaCha20OpenSSLStreamGenerator
+    /// ChaCha20算法
+    class ChaCha20CipherAlgorithm final : public ICipherAlgorithm
     {
     public:
-        typedef typename OriginalChaCha20OpenSSLStreamGenerator::IVByteArray IVByteArray;
-        typedef typename OriginalChaCha20OpenSSLStreamGenerator::KeyByteArray KeyByteArray;
-
-        ChaCha20OpenSSLStreamGenerator(const IVByteArray &iv, const KeyByteArray &key, StreamGeneratorMode mode = StreamGeneratorMode::Medium);
-
-        ~ChaCha20OpenSSLStreamGenerator() = default;
-
-    };
-
-    typedef StringCrypter<ChaCha20OpenSSLStreamGenerator> ChaCha20OpenSSLStringCrypter;
-
-    // 标准ChaCha20算法
-    typedef StreamGenerator<CHACHA20_IV_LENGTH, CHACHA20_KEY_LENGTH> OriginalChaCha20StdStreamGenerator;
-    class ChaCha20StdStreamGenerator final : public OriginalChaCha20StdStreamGenerator
-    {
-    public:
-        typedef typename OriginalChaCha20StdStreamGenerator::IVByteArray IVByteArray;
-        typedef typename OriginalChaCha20StdStreamGenerator::KeyByteArray KeyByteArray;
-
-        static constexpr size_t IV_LENGTH = OriginalChaCha20StdStreamGenerator::IV_LENGTH;
-        static constexpr size_t KEY_LENGTH = OriginalChaCha20StdStreamGenerator::KEY_LENGTH;
-        static constexpr size_t BLOCK_LENGTH = OriginalChaCha20StdStreamGenerator::BLOCK_LENGTH;
-    public:
-        ChaCha20StdStreamGenerator(const IVByteArray &iv,
-                                  const KeyByteArray &key,
-                                  StreamGeneratorMode mode = StreamGeneratorMode::Medium)
-            : StreamGenerator<IV_LENGTH, KEY_LENGTH, BLOCK_LENGTH>(iv, key),
-            m_botan_chacha20(Botan::StreamCipher::create_or_throw("ChaCha20"))
-        {
-            m_botan_chacha20->set_key(key.data(), key.size());
-            m_botan_chacha20->set_iv(iv.data(), iv.size());
-        }
-
-        ~ChaCha20StdStreamGenerator()=default;
+        static constexpr size_t IV_LENGTH = CHACHA20_IV_LENGTH;
+        static constexpr size_t KEY_LENGTH = CHACHA20_KEY_LENGTH;
+        static constexpr size_t BLOCK_LENGTH = CHACHA20_BLOCK_LENGTH;
 
     public:
-        //刷新缓冲区内容
-        Result<void> flush() override
-        {
-            if (this->m_current_index != this->m_max_buffer_size && this->m_is_flush_init)
-            {
-                return Result<void>::make_err(StreamGeneratorErrorCode::FAILED_WHEN_FLUSHING_BUFFER, "刷新缓冲区时失败");
-            }
-            this->m_current_index = 0;
-            auto temp_buffer = ByteVector(this->m_max_buffer_size);
-            // 执行加密，这里是对m_plaintext_buffer进行加密，并将结果拷贝到temp_buffer中
-            m_botan_chacha20->encipher(temp_buffer);
-            memcpy(this->m_current_buffer.get(), temp_buffer.data(), this->m_max_buffer_size);
-            return Result<void>::make_ok(this->m_max_buffer_size);
-        }
+        ChaCha20CipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
+
+    public:
+        [[nodiscard]] Result<void>
+        crypt(const byte *src_data, size_t src_len, byte *dst_data, size_t dst_len) noexcept override;
+
+        [[nodiscard]] size_t iv_length() const noexcept override { return IV_LENGTH; }
+
+        [[nodiscard]] size_t key_length() const noexcept override { return KEY_LENGTH; }
+
+        [[nodiscard]] size_t block_length() const noexcept override { return BLOCK_LENGTH; }
+
     private:
         std::unique_ptr<Botan::StreamCipher> m_botan_chacha20;
     };
-
-    typedef StringCrypter<ChaCha20StdStreamGenerator> ChaCha20StdStringCrypter;
 }

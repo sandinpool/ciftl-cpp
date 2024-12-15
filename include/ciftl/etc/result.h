@@ -11,60 +11,6 @@ namespace ciftl
 {
     typedef uint32_t ErrorCode;
 
-    // 错误码分类
-    enum class ErrorCodeBase : ErrorCode
-    {
-        OK = 0,
-        ENCODING_ERROR = 10000,
-        CRYPTER_ERROR = 20000
-    };
-
-    // 编码错误码
-    enum class EncodingErrorCode : ErrorCode
-    {
-        HEX_ERROR = ErrorCode(ErrorCodeBase::ENCODING_ERROR) + 1 * 1000,
-        BIN_ERROR = ErrorCode(ErrorCodeBase::ENCODING_ERROR) + 2 * 1000,
-        BASE64_ERROR = ErrorCode(ErrorCodeBase::ENCODING_ERROR) + 3 * 1000,
-    };
-
-    enum class HexEncodingErrorCode : ErrorCode
-    {
-        BAD_LENGTH = ErrorCode(EncodingErrorCode::HEX_ERROR) + 1,
-        BAD_CHARACTER
-    };
-
-    enum class Base64EncodingErrorCode : ErrorCode
-    {
-        BAD_DECODING_SOURCE = ErrorCode(EncodingErrorCode::BASE64_ERROR) + 1,
-    };
-
-    // 加密器错误码
-    enum class CrypterErrorCode : ErrorCode
-    {
-        STREAM_GENERATOR_ERROR = ErrorCode(ErrorCodeBase::CRYPTER_ERROR) + 1 * 1000,
-        STREAM_CRYPTER_ERROR = ErrorCode(ErrorCodeBase::CRYPTER_ERROR) + 2 * 1000,
-        STRING_CRYPTER_ERROR = ErrorCode(ErrorCodeBase::CRYPTER_ERROR) + 3 * 1000,
-        // CHACHA20_ERROR = ErrorCode(ErrorCodeBase::CRYPTER_ERROR) + 4 * 1000,
-    };
-
-    enum class StreamGeneratorErrorCode : ErrorCode
-    {
-        FAILED_WHEN_CRYPTING = ErrorCode(CrypterErrorCode::STREAM_GENERATOR_ERROR) + 1, // 执行密码操作时失败
-        FAILED_WHEN_FINALIZING_CRYPTION,                                                // 完成密码操作时失败
-        FAILED_WHEN_FLUSHING_BUFFER,                                                    // 刷新缓冲区时失败
-    };
-
-    enum class StreamCrypterErrorCode : ErrorCode
-    {
-        INVALID_CIPHER_STREAM_GENERATOR = ErrorCode(CrypterErrorCode::STREAM_CRYPTER_ERROR) + 1, // 创建密码流生成器失败
-    };
-
-    enum class StringCrypterErrorCode : ErrorCode
-    {
-        CIPHERTEXT_IS_TOO_SHORT = ErrorCode(CrypterErrorCode::STRING_CRYPTER_ERROR) + 1, // 密文文本太短
-        WRONG_PASSWORD,                                                                  // 密码错误
-    };
-
     class Error
     {
     public:
@@ -156,8 +102,8 @@ namespace ciftl
             std::stringstream ss;
             std::string opmess = m_optional_message ? m_optional_message.value() : "";
             ss << "Error Code: " << m_error_code
-               << ", Error Message: " << m_error_message
-               << (m_optional_message ? ", Optional Message:" + m_optional_message.value() : "");
+                    << ", Error Message: " << m_error_message
+                    << (m_optional_message ? ", Optional Message:" + m_optional_message.value() : "");
             return ss.str();
         }
 
@@ -168,13 +114,13 @@ namespace ciftl
     };
 
     // 要求是void类型或者是非错误类型的对象
-    template <class T>
+    template<class T>
     constexpr bool is_valid_body_type = std::is_void_v<T> || std::is_object_v<T>;
 
-    template <class E>
+    template<class E>
     constexpr bool is_valid_error_type = !std::is_void_v<E> && std::is_object_v<E>;
 
-    template <class T, class E = Error>
+    template<class T, class E = Error>
     class Result
     {
         static_assert(is_valid_body_type<T>, "Invalid body type!");
@@ -184,7 +130,7 @@ namespace ciftl
 
         using acceptable_type = std::conditional_t<std::is_void_v<T>, void *, T>;
         using pointer = T *;
-        using left_reference = std::conditional_t<std::is_void_v<T>, void *, std::add_lvalue_reference_t<T>>;
+        using left_reference = std::conditional_t<std::is_void_v<T>, void *, std::add_lvalue_reference_t<T> >;
 
     public:
         // 默认都是OK
@@ -256,8 +202,8 @@ namespace ciftl
             return Result(std::forward<acceptable_type>(actp));
         }
 
-        template <class... Args>
-        static Result make_ok(Args &&...args)
+        template<class... Args>
+        static Result make_ok(Args &&... args)
         {
             return Result(acceptable_type(std::forward<Args>(args)...));
         }
@@ -272,8 +218,8 @@ namespace ciftl
             return Result(std::forward<E>(e));
         }
 
-        template <class... Args>
-        static Result make_err(Args &&...args)
+        template<class... Args>
+        static Result make_err(Args &&... args)
         {
             return Result(E(std::forward<Args>(args)...));
         }
@@ -303,8 +249,7 @@ namespace ciftl
     public:
         std::shared_ptr<acceptable_type> shared_ok() const noexcept
         {
-            if (!m_is_ok)
-            {
+            if (!m_is_ok) {
                 return nullptr;
             }
             return m_body;
@@ -312,8 +257,7 @@ namespace ciftl
 
         std::optional<acceptable_type> ok() const noexcept
         {
-            if (!m_is_ok)
-            {
+            if (!m_is_ok) {
                 return std::nullopt;
             }
             return *m_body;
@@ -324,12 +268,12 @@ namespace ciftl
             return m_error;
         }
 
-        acceptable_type unwrap() const
+        acceptable_type &unwrap()
         {
             return *m_body;
         }
 
-        E unwrap_err() const
+        E &unwrap_err()
         {
             return m_error.value();
         }
@@ -339,5 +283,4 @@ namespace ciftl
         std::optional<E> m_error = std::nullopt;
         std::optional<bool> m_is_ok = std::nullopt;
     };
-
 };

@@ -1,17 +1,34 @@
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <openssl/bio.h>
-#include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <openssl/evp.h>
 
 #include <ciftl/encoding/encoding.h>
 
 namespace ciftl
 {
-    std::shared_ptr<Base64Encoding> default_base64_encoding()
+    static std::optional<Error> validate(const char *str, size_t len)
     {
-        return std::make_shared<Base64Encoding>();
+        if (len % 4 != 0) {
+            return std::make_optional(BASE64_BAD_DECODING_SOURCE);
+        }
+
+        for (size_t i = 0; i < len; ++i) {
+            if ((str[i] >= 'A' && str[i] <= 'Z') || (str[i] >= 'a' && str[i] <= 'z') ||
+                (str[i] >= '0' && str[i] <= '9') || str[i] == '+' || str[i] == '/') {
+                continue;
+            } else if (str[i] == '=') {
+                // padding character
+                if (i < len - 2 || (i == len - 2 && str[i + 1] != '=')) {
+                    return std::make_optional(BASE64_BAD_DECODING_SOURCE);
+                }
+            } else {
+                return std::make_optional(BASE64_BAD_DECODING_SOURCE);
+            }
+        }
+        return std::nullopt;
     }
 
     std::string Base64Encoding::encode(const ByteVector &vec)
@@ -25,8 +42,7 @@ namespace ciftl
         size_t chunk_size = BLOCK_SIZE / 4 * 3;
         size_t offset = 0;
         std::string base64_str;
-        while (offset < len)
-        {
+        while (offset < len) {
             BIO *b64 = BIO_new(BIO_f_base64());
             BIO *bio = BIO_new(BIO_s_mem());
             bio = BIO_push(b64, bio);
@@ -34,7 +50,8 @@ namespace ciftl
             // 去掉最后的换行符
             BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
 
-            int current_chunk_size = static_cast<int>(std::min(chunk_size, len - offset));
+            int current_chunk_size =
+                    static_cast<int>(std::min(chunk_size, len - offset));
             BIO_write(bio, data + offset, current_chunk_size);
             BIO_flush(bio);
 
@@ -48,55 +65,15 @@ namespace ciftl
         return base64_str;
     }
 
-    std::optional<Error> Base64Encoding::validate(const std::string &str)
-    {
-        return validate(str.c_str(), str.size());
-    }
-
-    std::optional<Error> Base64Encoding::validate(const char *str, size_t len)
-    {
-        if (len % 4 != 0)
-        {
-            auto e = Error(Base64EncodingErrorCode::BAD_DECODING_SOURCE, "非法的Base64字符串");
-            return std::make_optional(Error(Base64EncodingErrorCode::BAD_DECODING_SOURCE, "非法的Base64字符串"));
-        }
-
-        for (size_t i = 0; i < len; ++i)
-        {
-            if ((str[i] >= 'A' && str[i] <= 'Z') || (str[i] >= 'a' && str[i] <= 'z') ||
-                (str[i] >= '0' && str[i] <= '9') || str[i] == '+' || str[i] == '/')
-            {
-                continue;
-            }
-            else if (str[i] == '=')
-            {
-                // padding character
-                if (i < len - 2 || (i == len - 2 && str[i + 1] != '='))
-                {
-                    return std::make_optional(Error(Base64EncodingErrorCode::BAD_DECODING_SOURCE, "非法的Base64字符串"));
-                }
-            }
-            else
-            {
-                return std::make_optional(Error(Base64EncodingErrorCode::BAD_DECODING_SOURCE, "非法的Base64字符串"));
-            }
-        }
-        return std::nullopt;
-    }
-
-    Result<ByteVector> Base64Encoding::decode(const std::string &str, bool skip_validate)
+    Result<ByteVector> Base64Encoding::decode(const std::string &str)
     {
         return decode(str.c_str(), str.size());
     }
 
-    Result<ByteVector> Base64Encoding::decode(const char *str, size_t len, bool skip_validate)
+    Result<ByteVector> Base64Encoding::decode(const char *str, size_t len)
     {
-        if (!skip_validate)
-        {
-            if (auto res = validate(str, len); res)
-            {
-                return Result<ByteVector>::make_err(std::move(res.value()));
-            }
+        if (auto res = validate(str, len); res) {
+            return Result<ByteVector>::make_err(std::move(res.value()));
         }
         BIO *b64 = BIO_new(BIO_f_base64());
         BIO *bio = BIO_new_mem_buf(str, static_cast<int>(len));
@@ -108,8 +85,7 @@ namespace ciftl
 
         auto buffer = std::make_unique<char[]>(BLOCK_SIZE);
         int part_len;
-        while ((part_len = BIO_read(bio, buffer.get(), BLOCK_SIZE)) > 0)
-        {
+        while ((part_len = BIO_read(bio, buffer.get(), BLOCK_SIZE)) > 0) {
             decoded_str.append(buffer.get(), part_len);
         }
 

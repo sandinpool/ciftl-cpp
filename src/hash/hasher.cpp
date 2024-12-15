@@ -1,8 +1,9 @@
 #include <ciftl/hash/hasher.h>
 
+#include <crc32c/crc32c.h>
+
 namespace ciftl
 {
-
     OpenSSLHasher::OpenSSLHasher(const EVP_MD *md)
         : m_md(md)
     {
@@ -27,7 +28,7 @@ namespace ciftl
 
     void OpenSSLHasher::update(const std::string &data)
     {
-        update((byte *)data.c_str(), data.length());
+        update((byte *) data.c_str(), data.length());
     }
 
     ByteVector OpenSSLHasher::finalize()
@@ -63,4 +64,31 @@ namespace ciftl
     {
     }
 
+    Crc32cHasher::Crc32cHasher() : m_crc32c(0)
+    {
+    }
+
+    Crc32cHasher::~Crc32cHasher()
+    {
+    }
+
+    void Crc32cHasher::update(const byte *data, size_t len)
+    {
+        m_crc32c = crc32c::Extend(m_crc32c, data, len);
+    }
+
+    void Crc32cHasher::update(const ByteVector &data)
+    {
+        update(data.data(), data.size());
+    }
+
+    void Crc32cHasher::update(const std::string &data)
+    {
+        update((const byte *) data.data(), data.size());
+    }
+
+    ByteVector Crc32cHasher::finalize()
+    {
+        return auto_cast<ByteVector, Crc32Value>(m_crc32c);
+    }
 } // namespace ciftl

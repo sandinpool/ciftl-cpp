@@ -2,36 +2,23 @@
 #include <cstdint>
 #include <vector>
 #include <array>
+#include <assert.h>
 
 namespace ciftl
 {
+    // ByteVector
     typedef uint8_t byte;
     typedef std::vector<byte> ByteVector;
 
-    template <size_t ARRAY_SIZE>
+    // ByteArray
+    template<size_t ARRAY_SIZE>
     using ByteArray = std::array<byte, ARRAY_SIZE>;
 
+    // CRC32C
     typedef uint32_t Crc32Value;
     typedef ByteArray<sizeof(Crc32Value)> Crc32ByteArray;
 
-    template <class T1, class T2>
-    bool compare(const T1 &t1, const T2 &t2)
-    {
-        if (t1.size() != t2.size())
-        {
-            return false;
-        }
-        for (size_t i = 0; i < t1.size(); i++)
-        {
-            if (t1[i] != t2[i])
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    template <class T>
+    template<class T>
     T auto_cast(const byte *data)
     {
         T t;
@@ -39,12 +26,12 @@ namespace ciftl
         return t;
     }
 
-    template <class T1, class T2>
+    template<class T1, class T2>
     T1 auto_cast(const T2 &t2)
     {
     }
 
-    template <>
+    template<>
     inline ByteVector auto_cast(const std::string &str)
     {
         ByteVector res(str.size());
@@ -52,7 +39,7 @@ namespace ciftl
         return res;
     }
 
-    template <>
+    template<>
     inline std::string auto_cast(const ByteVector &vec)
     {
         std::string res(vec.size(), '\0');
@@ -60,66 +47,69 @@ namespace ciftl
         return res;
     }
 
-    template <>
-    inline ByteArray<sizeof(uint32_t)> auto_cast(const uint32_t &n)
+    template<>
+    inline Crc32Value auto_cast(const ByteVector &vec)
     {
-        ByteArray<sizeof(uint32_t)> res;
-        memcpy(res.data(), reinterpret_cast<const void *>(&n), sizeof(uint32_t));
+        assert(vec.size() == sizeof(Crc32Value));
+        Crc32Value res = 0;
+        memcpy(&res, vec.data(), vec.size());
         return res;
     }
 
-    template <>
-    inline ByteVector auto_cast(const uint32_t &n)
+    template<>
+    inline Crc32Value auto_cast(const ByteArray<sizeof(Crc32Value)> &vec)
     {
-        ByteVector res(sizeof(uint32_t));
-        memcpy(res.data(), reinterpret_cast<const void *>(&n), sizeof(uint32_t));
+        Crc32Value res;
+        memcpy(reinterpret_cast<void *>(&res), vec.data(), sizeof(Crc32Value));
         return res;
     }
 
-    template <>
-    inline uint32_t auto_cast(const ByteArray<sizeof(uint32_t)> &vec)
+    template<>
+    inline ByteArray<sizeof(Crc32Value)> auto_cast(const Crc32Value &n)
     {
-        uint32_t res;
-        memcpy(reinterpret_cast<void *>(&res), vec.data(), sizeof(uint32_t));
+        ByteArray<sizeof(Crc32Value)> res;
+        memcpy(res.data(), reinterpret_cast<const void *>(&n), sizeof(Crc32Value));
         return res;
     }
 
-    template <class T>
-    ByteVector combine(T t)
+    template<>
+    inline ByteVector auto_cast(const Crc32Value &n)
     {
-        ByteVector res;
-        size_t t_size = t.size();
-        res.resize(t_size);
-        memcpy(res.data(), t.data(), t_size);
+        ByteVector res(sizeof(Crc32Value));
+        memcpy(res.data(), reinterpret_cast<const void *>(&n), sizeof(Crc32Value));
         return res;
     }
 
-    template <class T, class... ARGS>
-    ByteVector combine(T t, ARGS... args)
+    // 缓冲区包装器
+    class WrappedBuffer
     {
-        ByteVector res;
-        size_t t_size = t.size();
-        res.resize(t_size);
-        memcpy(res.data(), t.data(), t_size);
-        ByteVector next_res = combine(args...);
-        res.resize(res.size() + next_res.size());
-        memcpy(res.data() + t_size, next_res.data(), next_res.size());
-        return res;
-    }
+        byte *m_data;
+        size_t m_size;
 
-    template <class SRC, class T>
-    void divide(SRC &src, size_t start_idx, T &t)
-    {
-        memcpy(t.data(), src.data() + start_idx, t.size());
-        return;
-    }
+    public:
+        WrappedBuffer() = default;
 
-    template <class SRC, class T, class... ARGS>
-    void divide(SRC &src, size_t start_idx, T &t, ARGS &...args)
-    {
-        memcpy(t.data(), src.data() + start_idx, t.size());
-        divide(src, start_idx + t.size(), args...);
-        return;
-    }
+        WrappedBuffer(const WrappedBuffer &other) = default;
+
+        WrappedBuffer(byte *data, size_t size): m_data(data), m_size(size)
+        {
+        }
+
+        WrappedBuffer &operator=(const WrappedBuffer &other) = default;
+
+        ~WrappedBuffer() = default;
+
+    public:
+        byte *data() const noexcept
+        {
+            return m_data;
+        }
+
+        size_t size() const noexcept
+        {
+            return m_size;
+        }
+    };
+
 
 }
