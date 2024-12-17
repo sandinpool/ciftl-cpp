@@ -1,9 +1,6 @@
 #pragma once
-#include <openssl/asn1.h>
-
 #include <ciftl/etc/etc.h>
-
-#include "core_crypter.h"
+#include <ciftl/crypter/crypter.h>
 
 namespace ciftl
 {

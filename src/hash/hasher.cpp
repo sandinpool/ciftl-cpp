@@ -1,6 +1,7 @@
-#include <ciftl/hash/hasher.h>
-
+#include <openssl/evp.h>
 #include <crc32c/crc32c.h>
+
+#include <ciftl/hash/hasher.h>
 
 namespace ciftl
 {

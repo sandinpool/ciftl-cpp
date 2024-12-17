@@ -1,0 +1,7 @@
+# CiftlConfig.cmake.in
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/CiftlTargets.cmake")
+
+# 为使用者提供一些额外的查找信息
+set(CIFTL_INCLUDE_DIRS "@CIFTL_INCLUDE_PATH@")
