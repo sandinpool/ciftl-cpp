@@ -43,8 +43,9 @@ namespace ciftl
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, 255);
-        for (size_t i = 0; i < len; ++i) {
-            data[i] = (byte) (dis(gen) & 0xFF);
+        for (size_t i = 0; i < len; ++i)
+        {
+            data[i] = (byte)(dis(gen) & 0xFF);
         }
     }
 
@@ -56,11 +57,13 @@ namespace ciftl
         hasher.update(password);
         ByteVector buffer = hasher.finalize();
         size_t cnt = 0;
-        for (; cnt < len;) {
+        for (; cnt < len;)
+        {
             size_t once_gen = std::min(len - cnt, buffer.size());
             memcpy(data + cnt, buffer.data(), once_gen);
             cnt += once_gen;
-            if (cnt >= len) {
+            if (cnt >= len)
+            {
                 break;
             }
             hasher.update(buffer);
@@ -73,31 +76,31 @@ namespace ciftl
     /// 该trait限制T类必须要拥有以下两个函数
     /// 1. T(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
     /// 2. crypt(const byte *src_data, size_t src_len, byte *dst_data, size_t dst_len)
-    template<class T>
+    template <typename T>
     class CipherAlgorithmTrait
     {
-        template<typename T, typename = void>
+        template <typename U, typename = void>
         struct has_crypt : std::false_type
         {
         };
 
-        template<typename T>
-        struct has_crypt<T, std::void_t<decltype(std::declval<T>().crypt(nullptr, 0, nullptr, 0))> > : std::true_type
+        template <typename U>
+        struct has_crypt<U, std::void_t<decltype(std::declval<U>().crypt(nullptr, 0, nullptr, 0))>> : std::true_type
         {
         };
 
-        template<typename T, typename = void>
+        template <typename U, typename = void>
         struct has_key_iv_constructor : std::false_type
         {
         };
 
-        template<typename T>
-        struct has_key_iv_constructor<T, std::void_t<decltype(T(nullptr, 0, nullptr, 0) )> > : std::true_type
+        template <typename U>
+        struct has_key_iv_constructor<U, std::void_t<decltype(U(nullptr, 0, nullptr, 0))>> : std::true_type
         {
         };
 
-        static_assert(has_crypt<T>::value, "T has no crypt function!");
-        static_assert(has_key_iv_constructor<T>::value, "T has no \"key&iv\" constructor!");
+        static_assert(has_crypt<T>::value, "U has no crypt function!");
+        static_assert(has_key_iv_constructor<T>::value, "U has no \"key&iv\" constructor!");
 
     public:
         static constexpr bool value = has_crypt<T>::value && has_key_iv_constructor<T>::value;
@@ -108,14 +111,14 @@ namespace ciftl
     class ICipherAlgorithm
     {
     public:
-        virtual [[nodiscard]] Result<void> crypt(const byte *src_data, size_t src_len, byte *dst_data,
-                                                 size_t dst_len) noexcept = 0;
+        virtual Result<void> crypt(const byte *src_data, size_t src_len, byte *dst_data,
+                                   size_t dst_len) noexcept = 0;
 
-        virtual [[nodiscard]] size_t iv_length() const noexcept = 0;
+        virtual size_t iv_length() const noexcept = 0;
 
-        virtual [[nodiscard]] size_t key_length() const noexcept = 0;
+        virtual size_t key_length() const noexcept = 0;
 
-        virtual [[nodiscard]] size_t block_length() const noexcept = 0;
+        virtual size_t block_length() const noexcept = 0;
     };
 
     /// 密码流生成器的接口
@@ -123,20 +126,20 @@ namespace ciftl
     {
     public:
         // 生成密码流
-        virtual [[nodiscard]] Result<void> generate(byte *data, size_t len) noexcept = 0;
+        virtual Result<void> generate(byte *data, size_t len) noexcept = 0;
 
-        virtual [[nodiscard]] Result<void> generate(ByteVector &data) noexcept = 0;
+        virtual Result<void> generate(ByteVector &data) noexcept = 0;
     };
 
     /// 字符串加密器接口
     class IStringCrypter
     {
     public:
-        virtual [[nodiscard]] Result<std::string> encrypt(const std::string &data,
-                                                          const std::string &password) noexcept = 0;
+        virtual Result<std::string> encrypt(const std::string &data,
+                                            const std::string &password) noexcept = 0;
 
-        virtual [[nodiscard]] Result<std::string> decrypt(const std::string &data,
-                                                          const std::string &password) noexcept = 0;
+        virtual Result<std::string> decrypt(const std::string &data,
+                                            const std::string &password) noexcept = 0;
     };
 
     /// 加密密码流生成器
@@ -145,7 +148,7 @@ namespace ciftl
     /// 同时，为了适用于分组密码，BLOCK_LENGTH也作为可选参数传入，默认为0表示为流密码
     /// 为了避免在将分组密码数组转换成密码流的过程时出现缓冲区大小无法被分组块大小整除的情况（也就是分组在填充到缓冲区时会有剩余）
     /// 这里需要规定缓冲区大小一定是分组长度的倍数
-    template<class CA>
+    template <class CA>
     class StreamGenerator : public IStreamGenerator
     {
         // 要求CA一定是实现了CipherAlgorithmTrait
@@ -169,7 +172,8 @@ namespace ciftl
         /// 获取不同模式下的缓存区大小
         static constexpr size_t stream_temp_buffer_size(StreamGeneratorMode m)
         {
-            if (BLOCK_LENGTH) {
+            if (BLOCK_LENGTH)
+            {
                 return stream_temp_block_count(m) * BLOCK_LENGTH;
             }
             return static_cast<size_t>(m) * 1024;
@@ -212,7 +216,8 @@ namespace ciftl
     private:
         Result<void> flush()
         {
-            if (this->m_current_index != this->m_max_buffer_size && this->m_is_flush_init) {
+            if (this->m_current_index != this->m_max_buffer_size && this->m_is_flush_init)
+            {
                 return Result<void>::make_err(FAILED_WHEN_FLUSHING_BUFFER);
             }
             this->m_current_index = 0;
@@ -222,11 +227,13 @@ namespace ciftl
 
     public:
         /// 生成加密流
-        [[nodiscard]] Result<void> generate(byte *data, size_t len) noexcept override
+        Result<void> generate(byte *data, size_t len) noexcept override
         {
             // 初始化刷新
-            if (!m_is_flush_init) {
-                if (auto res = flush(); res.is_err()) {
+            if (!m_is_flush_init)
+            {
+                if (auto res = flush(); res.is_err())
+                {
                     return res;
                 }
                 m_is_flush_init = true;
@@ -234,11 +241,13 @@ namespace ciftl
             size_t index = 0L;
             size_t once_gen = m_max_buffer_size - m_current_index;
             // 如果要产生新的buffer，则不断的循环这一步骤
-            for (; index + once_gen < len;) {
+            for (; index + once_gen < len;)
+            {
                 memcpy(data + index, m_current_buffer.get() + m_current_index, once_gen);
                 index += once_gen;
                 m_current_index += once_gen;
-                if (auto res = flush(); res.is_err()) {
+                if (auto res = flush(); res.is_err())
+                {
                     return res;
                 }
                 once_gen = m_max_buffer_size - m_current_index;
@@ -251,7 +260,7 @@ namespace ciftl
         }
 
         /// 生成密码流
-        [[nodiscard]] Result<void> generate(ByteVector &data) noexcept override
+        Result<void> generate(ByteVector &data) noexcept override
         {
             return generate(data.data(), data.size());
         }
@@ -272,13 +281,12 @@ namespace ciftl
         bool m_is_flush_init;
     };
 
-
     /// 字符串加密器
     /// StringCrypter基于StreamGenerator实现了对一段文本的加密，每次调用都是独立的
     /// StringCrypter密文格式
     /// |-----------IV（长度取决于加密算法）-----|----CRC32（4字节，会在最后被加密）-----|--------密文（使用StreamGenerator进行加密）--------|
     /// 暴露的信息只有IV，解密时通过IV和密码生成的Key来初始化StreamGenerator
-    template<class CA>
+    template <class CA>
     class StringCrypter : public IStringCrypter
     {
     public:
@@ -308,13 +316,15 @@ namespace ciftl
         }
 
     public:
-        [[nodiscard]] Result<std::string> encrypt(const std::string &data,
-                                                  const std::string &password) noexcept override
+        Result<std::string> encrypt(const std::string &data,
+                                    const std::string &password) noexcept override
         {
-            if (data.empty()) {
+            if (data.empty())
+            {
                 return Result<std::string>::make_err(CANNOT_DO_CRYPTION_TO_EMPTY_STRING);
             }
-            if (password.empty()) {
+            if (password.empty())
+            {
                 return Result<std::string>::make_err(PASSWORD_CANNOT_BE_EMPTY);
             }
             // 创建一个密码流生成器
@@ -324,7 +334,7 @@ namespace ciftl
                                                  key.data(), key.size(),
                                                  StreamGeneratorMode::Short);
             // 获取明文的字节流
-            byte *plain_data_bytes = (byte *) data.data();
+            byte *plain_data_bytes = (byte *)data.data();
             size_t plain_data_bytes_len = data.size();
             // 获取明文的校验值
             Crc32cHasher hasher;
@@ -335,21 +345,25 @@ namespace ciftl
             auto cipher_data_bytes = std::make_unique<byte[]>(plain_data_bytes_len);
             // 处理加密时错误
             if (auto generate_result = stream_generator.generate(cipher_data_bytes.get(), plain_data_bytes_len);
-                generate_result.is_err()) {
+                generate_result.is_err())
+            {
                 return Result<std::string>::make_err(std::move(generate_result.unwrap_err()));
             }
             // 异或加密内容主体
-            for (size_t i = 0; i < plain_data_bytes_len; i++) {
+            for (size_t i = 0; i < plain_data_bytes_len; i++)
+            {
                 cipher_data_bytes[i] = plain_data_bytes[i] ^ cipher_data_bytes[i];
             }
             // 继续加密校验值
             auto cipher_data_checksum = std::make_unique<byte[]>(plain_data_checksum_len);
             if (auto generate_result = stream_generator.generate(cipher_data_checksum.get(), plain_data_checksum_len);
-                generate_result.is_err()) {
+                generate_result.is_err())
+            {
                 return Result<std::string>::make_err(std::move(generate_result.unwrap_err()));
             }
             // 异或加密checksum
-            for (size_t i = 0; i < plain_data_checksum_len; i++) {
+            for (size_t i = 0; i < plain_data_checksum_len; i++)
+            {
                 cipher_data_checksum[i] = plain_data_checksum[i] ^ cipher_data_checksum[i];
             }
             auto result_vec = concat(std::move(iv),
@@ -360,19 +374,22 @@ namespace ciftl
             return Result<std::string>::make_ok(base64_encoding.encode(result_vec));
         }
 
-        [[nodiscard]] Result<std::string> decrypt(const std::string &data,
-                                                  const std::string &password) noexcept override
+        Result<std::string> decrypt(const std::string &data,
+                                    const std::string &password) noexcept override
         {
-            if (data.empty()) {
+            if (data.empty())
+            {
                 return Result<std::string>::make_err(CANNOT_DO_CRYPTION_TO_EMPTY_STRING);
             }
-            if (password.empty()) {
+            if (password.empty())
+            {
                 return Result<std::string>::make_err(PASSWORD_CANNOT_BE_EMPTY);
             }
             // 对密文进行解码
             Base64Encoding base64_encoding;
             auto result_data_bytes = base64_encoding.decode(data);
-            if (result_data_bytes.is_err()) {
+            if (result_data_bytes.is_err())
+            {
                 return Result<std::string>::make_err(std::move(result_data_bytes.unwrap_err()));
             }
             // 从原文中获取数据
@@ -384,15 +401,20 @@ namespace ciftl
             ByteVector cipher_data_bytes;
             // 使用MemoryTaker获取内容
             MemoryTaker mt(data_bytes.data(), data_bytes.size());
-            if (auto res = mt.take(iv); res.is_err()) {
+            if (auto res = mt.take(iv); res.is_err())
+            {
                 return Result<std::string>::make_err(std::move(res.unwrap_err()));
             }
-            if (auto res = mt.take(cipher_data_checksum); res.is_err()) {
+            if (auto res = mt.take(cipher_data_checksum); res.is_err())
+            {
                 return Result<std::string>::make_err(std::move(res.unwrap_err()));
             }
-            if (auto res = mt.take_all(); res.is_err()) {
+            if (auto res = mt.take_all(); res.is_err())
+            {
                 return Result<std::string>::make_err(std::move(res.unwrap_err()));
-            } else {
+            }
+            else
+            {
                 cipher_data_bytes = std::move(res.unwrap());
             }
             size_t cipher_data_bytes_len = cipher_data_bytes.size();
@@ -405,21 +427,25 @@ namespace ciftl
             auto plain_data_bytes = std::make_unique<byte[]>(cipher_data_bytes_len);
             auto generate_result = stream_generator.generate(plain_data_bytes.get(), cipher_data_bytes_len);
             // 处理解密时错误
-            if (generate_result.is_err()) {
+            if (generate_result.is_err())
+            {
                 return Result<std::string>::make_err(std::move(generate_result.unwrap_err()));
             }
             // 异或解密内容主体
-            for (size_t i = 0; i < cipher_data_bytes_len; i++) {
+            for (size_t i = 0; i < cipher_data_bytes_len; i++)
+            {
                 plain_data_bytes[i] = plain_data_bytes[i] ^ cipher_data_bytes[i];
             }
             // 继续解密校验值
             auto plain_data_checksum = std::make_unique<byte[]>(cipher_data_checksum_len);
             if (auto generate_result = stream_generator.generate(plain_data_checksum.get(), cipher_data_checksum_len);
-                generate_result.is_err()) {
+                generate_result.is_err())
+            {
                 return Result<std::string>::make_err(std::move(generate_result.unwrap_err()));
             }
             // 异或解密checksum主体
-            for (size_t i = 0; i < cipher_data_checksum_len; i++) {
+            for (size_t i = 0; i < cipher_data_checksum_len; i++)
+            {
                 plain_data_checksum[i] = plain_data_checksum[i] ^ cipher_data_checksum[i];
             }
             // 获取明文的校验值
@@ -427,7 +453,8 @@ namespace ciftl
             hasher.update(plain_data_bytes.get(), cipher_data_bytes_len);
             auto cipher_data_checksum_decrypted = hasher.finalize();
             // 比较前后的校验和
-            if (memcmp(plain_data_checksum.get(), cipher_data_checksum_decrypted.data(), cipher_data_checksum_len)) {
+            if (memcmp(plain_data_checksum.get(), cipher_data_checksum_decrypted.data(), cipher_data_checksum_len))
+            {
                 return Result<std::string>::make_err(FAILED_WHEN_CHECKING_CRC32_VALUE_OF_DECRYPTED_CONTENT);
             }
             ByteVector result_vec(cipher_data_bytes_len);
