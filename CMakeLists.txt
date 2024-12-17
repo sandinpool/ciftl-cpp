@@ -110,6 +110,7 @@ add_subdirectory(tests)
 set(CMAKE_INSTALL_LIBDIR "lib")
 set(CMAKE_INSTALL_BINDIR "bin")
 set(CMAKE_INSTALL_INCLUDEDIR "include")
+set(CMAKE_INSTALL_CONFIGDIR "lib/cmake/${PROJECT_NAME}")
 
 export(TARGETS ${PROJECT_NAME} FILE "${CMAKE_CURRENT_BINARY_DIR}/CiftlTargets.cmake")
 
@@ -128,7 +129,7 @@ install(TARGETS ${PROJECT_NAME}
 install(EXPORT CiftlTargets
     FILE CiftlTargets.cmake
     NAMESPACE Ciftl::
-    DESTINATION lib/cmake/ciftl-cpp
+    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 # 生成版本文件
@@ -142,17 +143,17 @@ write_basic_package_version_file(
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfigVersion.cmake"
-    DESTINATION lib/cmake/ciftl-cpp
+    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 # 生成库的 Config.cmake 文件
 configure_package_config_file(
     "${CMAKE_CURRENT_LIST_DIR}/CiftlConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
-    INSTALL_DESTINATION lib/cmake/ciftl-cpp
+    INSTALL_DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
-    DESTINATION lib/cmake/ciftl-cpp
+    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
