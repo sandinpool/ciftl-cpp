@@ -26,14 +26,14 @@ namespace ciftl
         ChaCha20CipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
     public:
-        [[nodiscard]] Result<void>
+        Result<void>
         crypt(const byte *src_data, size_t src_len, byte *dst_data, size_t dst_len) noexcept override;
 
-        [[nodiscard]] size_t iv_length() const noexcept override { return IV_LENGTH; }
+        size_t iv_length() const noexcept override { return IV_LENGTH; }
 
-        [[nodiscard]] size_t key_length() const noexcept override { return KEY_LENGTH; }
+        size_t key_length() const noexcept override { return KEY_LENGTH; }
 
-        [[nodiscard]] size_t block_length() const noexcept override { return BLOCK_LENGTH; }
+        size_t block_length() const noexcept override { return BLOCK_LENGTH; }
 
     private:
         EVP_CIPHER_CTX_UniquePtr m_ctx;

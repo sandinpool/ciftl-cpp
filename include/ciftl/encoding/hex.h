@@ -24,7 +24,7 @@ namespace ciftl
             m_case = c;
         }
 
-        [[nodiscard]] inline Case get_case() const
+        inline Case get_case() const
         {
             return m_case;
         }

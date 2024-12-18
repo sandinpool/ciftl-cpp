@@ -101,7 +101,9 @@ add_library(${PROJECT_NAME} SHARED
         ${CIFTL_CRYPTER_SOURCE}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL OpenSSL::Crypto Crc32c::crc32c)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL
+        OpenSSL::Crypto
+        Crc32c::crc32c)
 
 # 添加单元测试
 enable_testing()
@@ -127,33 +129,33 @@ install(TARGETS ${PROJECT_NAME}
 
 # 安装 CMake 配置文件
 install(EXPORT CiftlTargets
-    FILE CiftlTargets.cmake
-    NAMESPACE Ciftl::
-    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+        FILE CiftlTargets.cmake
+        NAMESPACE Ciftl::
+        DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 # 生成版本文件
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
+        "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfigVersion.cmake"
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+        "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 # 生成库的 Config.cmake 文件
 configure_package_config_file(
-    "${CMAKE_CURRENT_LIST_DIR}/CiftlConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+        "${CMAKE_CURRENT_LIST_DIR}/CiftlConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
+        INSTALL_DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
-    DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
+        "${CMAKE_CURRENT_BINARY_DIR}/CiftlConfig.cmake"
+        DESTINATION ${CMAKE_INSTALL_CONFIGDIR}
 )
