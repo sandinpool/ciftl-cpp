@@ -7,8 +7,8 @@
 
 namespace ciftl
 {
-    OpenSSLAES128OFBCipherAlgorithm::OpenSSLAES128OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
-                                                                     const byte *key_data, size_t key_len)
+    AES128OFBCipherAlgorithm::AES128OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                       const byte *key_data, size_t key_len)
         : OriginalOpenSSLAES128CipherAlgorithm(
             OriginalOpenSSLAES128CipherAlgorithm::create_openssl_context(
                 EVP_aes_128_ofb(), iv_data, iv_len, key_data, key_len))
@@ -18,8 +18,8 @@ namespace ciftl
 
 namespace ciftl
 {
-    OpenSSLAES192OFBCipherAlgorithm::OpenSSLAES192OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
-                                                                     const byte *key_data, size_t key_len)
+    AES192OFBCipherAlgorithm::AES192OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                       const byte *key_data, size_t key_len)
         : OriginalOpenSSLAES192CipherAlgorithm(
             OriginalOpenSSLAES192CipherAlgorithm::create_openssl_context(
                 EVP_aes_192_ofb(), iv_data, iv_len, key_data, key_len))
@@ -29,8 +29,8 @@ namespace ciftl
 
 namespace ciftl
 {
-    OpenSSLAES256OFBCipherAlgorithm::OpenSSLAES256OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
-                                                                     const byte *key_data, size_t key_len)
+    AES256OFBCipherAlgorithm::AES256OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                       const byte *key_data, size_t key_len)
         : OriginalOpenSSLAES256CipherAlgorithm(
             OriginalOpenSSLAES256CipherAlgorithm::create_openssl_context(
                 EVP_aes_256_ofb(), iv_data, iv_len, key_data, key_len))

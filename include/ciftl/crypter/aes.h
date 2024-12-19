@@ -15,12 +15,12 @@ namespace ciftl
     typedef OpenSSLCipherAlgorithm<AES128_IV_LENGTH, AES128_KEY_LENGTH, AES128_BLOCK_LENGTH>
     OriginalOpenSSLAES128CipherAlgorithm;
 
-    class OpenSSLAES128OFBCipherAlgorithm : public OriginalOpenSSLAES128CipherAlgorithm
+    class AES128OFBCipherAlgorithm : public OriginalOpenSSLAES128CipherAlgorithm
     {
     public:
-        OpenSSLAES128OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
+        AES128OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        ~OpenSSLAES128OFBCipherAlgorithm() = default;
+        ~AES128OFBCipherAlgorithm() = default;
     };
 }
 
@@ -33,12 +33,12 @@ namespace ciftl
     typedef OpenSSLCipherAlgorithm<AES192_IV_LENGTH, AES192_KEY_LENGTH, AES192_BLOCK_LENGTH>
     OriginalOpenSSLAES192CipherAlgorithm;
 
-    class OpenSSLAES192OFBCipherAlgorithm : public OriginalOpenSSLAES192CipherAlgorithm
+    class AES192OFBCipherAlgorithm : public OriginalOpenSSLAES192CipherAlgorithm
     {
     public:
-        OpenSSLAES192OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
+        AES192OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        ~OpenSSLAES192OFBCipherAlgorithm() = default;
+        ~AES192OFBCipherAlgorithm() = default;
     };
 }
 
@@ -51,11 +51,11 @@ namespace ciftl
     typedef OpenSSLCipherAlgorithm<AES256_IV_LENGTH, AES256_KEY_LENGTH, AES256_BLOCK_LENGTH>
     OriginalOpenSSLAES256CipherAlgorithm;
 
-    class OpenSSLAES256OFBCipherAlgorithm : public OriginalOpenSSLAES256CipherAlgorithm
+    class AES256OFBCipherAlgorithm : public OriginalOpenSSLAES256CipherAlgorithm
     {
     public:
-        OpenSSLAES256OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
+        AES256OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        ~OpenSSLAES256OFBCipherAlgorithm() = default;
+        ~AES256OFBCipherAlgorithm() = default;
     };
 }

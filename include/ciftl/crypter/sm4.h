@@ -15,11 +15,11 @@ namespace ciftl
     typedef OpenSSLCipherAlgorithm<SM4_IV_LENGTH, SM4_KEY_LENGTH, SM4_BLOCK_LENGTH>
     OriginalOpenSSLSM4CipherAlgorithm;
 
-    class OpenSSLSM4OFBCipherAlgorithm : public OriginalOpenSSLSM4CipherAlgorithm
+    class SM4OFBCipherAlgorithm : public OriginalOpenSSLSM4CipherAlgorithm
     {
     public:
-        OpenSSLSM4OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
+        SM4OFBCipherAlgorithm(const byte *iv_data, size_t iv_len, const byte *key_data, size_t key_len);
 
-        ~OpenSSLSM4OFBCipherAlgorithm() = default;
+        ~SM4OFBCipherAlgorithm() = default;
     };
 }

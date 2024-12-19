@@ -7,8 +7,8 @@
 
 namespace ciftl
 {
-    OpenSSLSM4OFBCipherAlgorithm::OpenSSLSM4OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
-                                                               const byte *key_data, size_t key_len)
+    SM4OFBCipherAlgorithm::SM4OFBCipherAlgorithm(const byte *iv_data, size_t iv_len,
+                                                 const byte *key_data, size_t key_len)
         : OriginalOpenSSLSM4CipherAlgorithm(
             OriginalOpenSSLAES128CipherAlgorithm::create_openssl_context(
                 EVP_sm4_ofb(), iv_data, iv_len, key_data, key_len))
